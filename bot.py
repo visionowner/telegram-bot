@@ -3,7 +3,7 @@ import os
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from threading import Thread
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, ChatJoinRequestHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import Application, CommandHandler, ChatJoinRequestHandler, MessageHandler, filters, ContextTypes
 
 TOKEN = "8821749427:AAHZbUq0ZVVCyAPZZgKJ6Cmcih8gZB7HThU"
 APK_URL = "https://t.me/+ui28nFh4I5o0NjMx"
@@ -21,13 +21,10 @@ def run_web_server():
     server = HTTPServer(('0.0.0.0', port), HealthCheckHandler)
     server.serve_forever()
 
-# 1. Join Request Handler
-async def approve_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user = update.chat_join_request.from_user
-    chat_id = user.id
-
+# Helper function to send welcome video message
+async def send_welcome_message(bot, chat_id, first_name):
     welcome_msg = (
-        f"Hello {user.first_name}! 🎉\n\n"
+        f"Hello {first_name}! 🎉\n\n"
         "HELLO USER CONGRATULATIONS ✨\n"
         "YOU ARE A PREMIUM USER NOW 🔥\n\n\n"
         "COLOUR TRADING LOSS RECOVER CHANNEL LINK 🔥\n"
@@ -39,7 +36,7 @@ async def approve_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     reply_markup = InlineKeyboardMarkup(keyboard)
 
     try:
-        await context.bot.send_video(
+        await bot.send_video(
             chat_id=chat_id,
             video=VIDEO_URL,
             caption=welcome_msg,
@@ -49,7 +46,17 @@ async def approve_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     except Exception as e:
         print(f"DM Error: {e}")
 
-# 2. Channel Auto Reaction Handler
+# 1. Direct /start Command Handler
+async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.effective_user
+    await send_welcome_message(context.bot, user.id, user.first_name)
+
+# 2. Join Request Handler
+async def approve_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user = update.chat_join_request.from_user
+    await send_welcome_message(context.bot, user.id, user.first_name)
+
+# 3. Channel Auto Reaction Handler
 async def auto_react(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         await context.bot.set_message_reaction(
@@ -65,10 +72,12 @@ def main():
 
     app = Application.builder().token(TOKEN).build()
     
+    # Handlers
+    app.add_handler(CommandHandler("start", start_command))
     app.add_handler(ChatJoinRequestHandler(approve_request))
     app.add_handler(MessageHandler(filters.ChatType.CHANNEL, auto_react))
     
-    print("Bot is running with auto-reactions...")
+    print("Bot is running...")
     app.run_polling(drop_pending_updates=True)
 
 if __name__ == "__main__":
