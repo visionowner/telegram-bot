@@ -8,7 +8,7 @@ from telegram.ext import Application, CommandHandler, ChatJoinRequestHandler, Me
 TOKEN = "8821749427:AAHZbUq0ZVVCyAPZZgKJ6Cmcih8gZB7HThU"
 APK_URL = "https://t.me/+ui28nFh4I5o0NjMx"
 
-# Health check server for Render
+# 1. Health check server for Render (24/7 Keep Alive)
 class HealthCheckHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         self.send_response(200)
@@ -20,7 +20,7 @@ def run_web_server():
     server = HTTPServer(('0.0.0.0', port), HealthCheckHandler)
     server.serve_forever()
 
-# Helper function to send welcome message (Direct Text + Button)
+# Helper function to send welcome message with join link button
 async def send_welcome_message(bot, chat_id, first_name):
     welcome_msg = (
         f"Hello {first_name}! 🎉\n\n"
@@ -44,17 +44,17 @@ async def send_welcome_message(bot, chat_id, first_name):
     except Exception as e:
         print(f"DM Error: {e}")
 
-# 1. Direct /start Command Handler
+# 2. Direct /start Command Handler
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.effective_user
     await send_welcome_message(context.bot, user.id, user.first_name)
 
-# 2. Join Request Handler
+# 3. Join Request Handler (Triggers when user requests to join channel)
 async def approve_request(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user = update.chat_join_request.from_user
     await send_welcome_message(context.bot, user.id, user.first_name)
 
-# 3. Channel Auto Reaction Handler
+# 4. Channel Auto Reaction Handler (Triggers on new channel posts)
 async def auto_react(update: Update, context: ContextTypes.DEFAULT_TYPE):
     try:
         await context.bot.set_message_reaction(
@@ -62,15 +62,18 @@ async def auto_react(update: Update, context: ContextTypes.DEFAULT_TYPE):
             message_id=update.effective_message.message_id,
             reaction=["🔥", "👍", "❤️"]
         )
+        print(f"Reaction successfully added to post {update.effective_message.message_id}")
     except Exception as e:
         print(f"Reaction Error: {e}")
 
 def main():
+    # Start Keep-Alive Web Server
     Thread(target=run_web_server, daemon=True).start()
 
+    # Build Telegram Bot Application
     app = Application.builder().token(TOKEN).build()
     
-    # Handlers
+    # Handlers Registration
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(ChatJoinRequestHandler(approve_request))
     app.add_handler(MessageHandler(filters.ChatType.CHANNEL, auto_react))
