@@ -5,7 +5,7 @@ from threading import Thread
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, ChatJoinRequestHandler, MessageHandler, filters, ContextTypes
 
-TOKEN = "8821749427:AAFtRZVS3qUNQgP0sadNBYfnzrc-7O0mOrA"
+TOKEN = "8821749427:AAHZbUq0ZVVCyAPZZgKJ6Cmcih8gZB7HThU"
 APK_URL = "https://t.me/+ui28nFh4I5o0NjMx"
 VIDEO_URL = "https://raw.githubusercontent.com/telegramdesktop/tdesktop/dev/Telegram/Resources/art/video.mp4"
 
